@@ -1,0 +1,13 @@
+"use client";
+import { FormEvent, useState } from "react";
+
+export function LeadForm({ locale }: { locale: "es" | "pt" | "en" }) {
+  const [state, setState] = useState<"idle" | "sending" | "success" | "error">("idle");
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setState("sending"); const form = new FormData(event.currentTarget);
+    const payload = Object.fromEntries(form.entries());
+    const response = await fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, locale, sourcePath: window.location.pathname }) });
+    if (response.ok) { event.currentTarget.reset(); setState("success"); } else setState("error");
+  }
+  return <form className="quote-form" onSubmit={submit}><div className="form-row"><label>Nombre<input required name="name" autoComplete="name" placeholder="Su nombre" /></label><label>Empresa<input required name="company" autoComplete="organization" placeholder="Nombre de la empresa" /></label></div><div className="form-row"><label>Email<input required type="email" name="email" autoComplete="email" placeholder="nombre@empresa.com" /></label><label>País / región<select required name="country" defaultValue=""><option value="" disabled>Seleccionar</option><option>Argentina</option><option>Brasil</option><option>Chile</option><option>Colombia</option><option>Perú</option><option>Otro país de Sudamérica</option></select></label></div><label>Interés de producto<select name="productInterest" defaultValue=""><option value="">Seleccionar sistema</option><option>Conjunto EDJ</option><option>Bomba diésel + jockey</option><option>Conjunto eléctrico + jockey</option><option>Bomba de eje largo</option><option>Otro / necesito orientación</option></select></label><div className="form-row"><label>Caudal<input name="flow" placeholder="Ej. 500 GPM" /></label><label>Presión / altura<input name="pressure" placeholder="Ej. 10 bar" /></label></div><label>Requerimiento<textarea required name="message" rows={4} minLength={10} placeholder="Aplicación, plazo y documentos necesarios." /></label><label className="consent"><input required type="checkbox" /> <span>Acepto el uso de mis datos para responder esta solicitud.</span></label><input className="honeypot" tabIndex={-1} autoComplete="off" name="website" aria-hidden="true" /><button className="btn" disabled={state === "sending"}>{state === "sending" ? "Enviando…" : "Enviar requerimiento →"}</button>{state === "success" && <p className="form-success">Solicitud guardada. Nuestro equipo se pondrá en contacto.</p>}{state === "error" && <p className="form-error">No fue posible guardar la solicitud. Inténtelo nuevamente.</p>}</form>;
+}
