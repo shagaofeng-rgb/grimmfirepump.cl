@@ -4,6 +4,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "GRIMM PUMP | Sistemas contra incendio para Sudamérica",
   description: "Paquetes de bombeo contra incendio configurados para proyectos industriales y comerciales en Sudamérica.",
+  icons: {
+    icon: [{ url: "/assets/brand/grimm-pump-logo.png", type: "image/png" }],
+    shortcut: ["/assets/brand/grimm-pump-logo.png"],
+    apple: [{ url: "/assets/brand/grimm-pump-logo.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
