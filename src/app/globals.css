@@ -187,8 +187,7 @@ footer { padding: 50px 0 23px; background: #061a2b; color: #b7c9d2; font-size: 1
 .admin-topbar b { color: var(--signal); font-size: 12px; letter-spacing: .04em; }
 .admin-topbar span { color: var(--muted); font-size: 11px; }
 .admin-topbar > div:last-child { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
-.global-search { display: flex; align-items: center; gap: 7px; min-width: 280px; padding: 0 10px; border: 1px solid #dce5e8; border-radius: 7px; background: #f8fafb; color: #78909b; }
-.global-search input { width: 100%; min-height: 35px; border: 0; outline: 0; background: transparent; font-size: 12px; }
+.admin-context { padding: 9px 11px; border: 1px solid #dce5e8; border-radius: 7px; background: #f8fafb; color: #547080 !important; font-size: 11px !important; font-weight: 800; }
 .pending-link { padding: 9px 11px; border: 1px solid #f2dcc2; border-radius: 7px; background: #fffaf4; color: #c96a17; font-size: 11px; font-weight: 800; text-decoration: none; }
 .admin-workspace { max-width: 1350px; margin: 0 auto; }
 .admin-page-header { margin-bottom: 28px; }
@@ -246,6 +245,7 @@ td em { display: inline-block; padding: 4px 7px; border-radius: 5px; background:
 .resource-form .btn { width: max-content; }
 .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 15px 20px; border-top: 1px solid #d9e3e6; color: var(--muted); font-size: 12px; }
 .row-actions { white-space: nowrap; }
+.text-action { margin-right: 10px; border: 0; background: transparent; color: var(--signal-dark); font-size: 11px; font-weight: 800; }
 .row-actions select { margin-right: 8px; padding: 5px; border: 1px solid #bdcdd2; border-radius: 5px; font-size: 11px; }
 .danger-link { border: 0; background: transparent; color: var(--danger); font-size: 11px; font-weight: 800; }
 .loading { padding: 25px; color: var(--muted); }
@@ -289,7 +289,6 @@ td em { display: inline-block; padding: 4px 7px; border-radius: 5px; background:
   .admin-shell > section { padding: 25px 18px; }
   .admin-topbar { align-items: stretch; flex-direction: column; margin: -25px -18px 25px; padding: 14px 18px; }
   .admin-topbar > div:last-child { flex-wrap: wrap; justify-content: start; }
-  .global-search { min-width: min(100%, 300px); flex: 1 1 100%; }
   .lead-card { grid-template-columns: 1fr; }
 }
 
