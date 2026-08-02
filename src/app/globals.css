@@ -182,6 +182,30 @@ footer { padding: 50px 0 23px; background: #061a2b; color: #b7c9d2; font-size: 1
 .admin-user span { font-size: 12px; font-weight: 750; }
 .admin-user small { overflow-wrap: anywhere; color: #9fb5c0; font-size: 10px; }
 .admin-shell > section { min-width: 0; padding: 42px; }
+.admin-topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 72px; margin: -42px -42px 36px; padding: 14px 42px; border-bottom: 1px solid #d9e3e6; background: #fff; }
+.admin-topbar > div { display: grid; gap: 4px; }
+.admin-topbar b { color: var(--signal); font-size: 12px; letter-spacing: .04em; }
+.admin-topbar span { color: var(--muted); font-size: 11px; }
+.admin-topbar > div:last-child { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.global-search { display: flex; align-items: center; gap: 7px; min-width: 280px; padding: 0 10px; border: 1px solid #dce5e8; border-radius: 7px; background: #f8fafb; color: #78909b; }
+.global-search input { width: 100%; min-height: 35px; border: 0; outline: 0; background: transparent; font-size: 12px; }
+.pending-link { padding: 9px 11px; border: 1px solid #f2dcc2; border-radius: 7px; background: #fffaf4; color: #c96a17; font-size: 11px; font-weight: 800; text-decoration: none; }
+.admin-workspace { max-width: 1350px; margin: 0 auto; }
+.admin-page-header { margin-bottom: 28px; }
+.admin-page-header > div:first-child > span { display: block; max-width: 700px; margin-top: 10px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.admin-notice { margin: -13px 0 16px; padding: 10px 13px; border-radius: 7px; background: #eef8f0; }
+.lead-list { display: grid; gap: 14px; padding: 16px; background: #f7fafb; }
+.lead-card { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 20px; padding: 19px; border: 1px solid #dce6e9; border-radius: 9px; background: #fff; }
+.lead-card h2 { display: flex; align-items: center; gap: 10px; font-size: 19px; }
+.lead-card h2 em { padding: 3px 7px; border-radius: 5px; background: #e9f4f8; color: #35687d; font-size: 10px; font-style: normal; letter-spacing: .02em; }
+.lead-card p { margin: 10px 0; color: var(--muted); font-size: 12px; }
+.lead-card b { display: block; color: #3a5260; font-size: 12px; font-weight: 700; }
+.lead-card small { display: block; margin-top: 16px; color: #80939c; font-size: 10px; }
+.lead-card aside { display: grid; align-content: start; gap: 11px; padding: 15px; border-radius: 7px; background: #f5f8f9; }
+.lead-card aside label { display: grid; gap: 6px; color: #496372; font-size: 11px; font-weight: 800; }
+.lead-card aside select { padding: 9px 10px; border: 1px solid #becdd3; border-radius: 6px; background: #fff; font-weight: 700; }
+.lead-card aside p { margin: 0; }
+.insight-panel { max-width: 1120px; margin: 0 auto; }
 .admin-page-header, .admin-shell header { display: flex; align-items: start; justify-content: space-between; gap: 22px; }
 .admin-page-header p, .admin-shell header p { margin: 0 0 5px; color: var(--muted); font-size: 12px; }
 .admin-page-header h1, .admin-shell header h1 { font-size: 38px; }
@@ -236,6 +260,7 @@ td em { display: inline-block; padding: 4px 7px; border-radius: 5px; background:
   .process-grid article:nth-child(3) { padding-left: 0; border-left: 0; }
   .admin-shell { grid-template-columns: 220px minmax(0, 1fr); }
   .admin-shell > section { padding: 32px; }
+  .admin-topbar { margin: -32px -32px 30px; padding-inline: 32px; }
   .stat-row { grid-template-columns: repeat(2, 1fr); }
   .admin-grid { grid-template-columns: 1fr; }
 }
@@ -262,6 +287,10 @@ td em { display: inline-block; padding: 4px 7px; border-radius: 5px; background:
   .admin-shell aside nav { display: flex; flex-wrap: wrap; gap: 4px 7px; margin-top: 17px; }
   .admin-user { display: none; }
   .admin-shell > section { padding: 25px 18px; }
+  .admin-topbar { align-items: stretch; flex-direction: column; margin: -25px -18px 25px; padding: 14px 18px; }
+  .admin-topbar > div:last-child { flex-wrap: wrap; justify-content: start; }
+  .global-search { min-width: min(100%, 300px); flex: 1 1 100%; }
+  .lead-card { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 560px) {

@@ -110,6 +110,20 @@ export async function getDatabase() {
         byte_size INTEGER NOT NULL, alt_text TEXT, caption TEXT, created_by TEXT, created_at TEXT NOT NULL, deleted_at TEXT,
         FOREIGN KEY(created_by) REFERENCES users(id)
       );
+      CREATE TABLE IF NOT EXISTS site_pages (
+        id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, content TEXT, status TEXT NOT NULL DEFAULT 'draft',
+        created_by TEXT, updated_by TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT,
+        FOREIGN KEY(created_by) REFERENCES users(id), FOREIGN KEY(updated_by) REFERENCES users(id)
+      );
+      CREATE TABLE IF NOT EXISTS download_assets (
+        id TEXT PRIMARY KEY, name TEXT NOT NULL, file_url TEXT NOT NULL, category TEXT, status TEXT NOT NULL DEFAULT 'published',
+        created_by TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT,
+        FOREIGN KEY(created_by) REFERENCES users(id)
+      );
+      CREATE TABLE IF NOT EXISTS form_configurations (
+        id TEXT PRIMARY KEY, name TEXT NOT NULL, form_type TEXT NOT NULL DEFAULT 'contact', status TEXT NOT NULL DEFAULT 'active',
+        notification_email TEXT, fields_json TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT
+      );
       CREATE TABLE IF NOT EXISTS news_categories (
         id TEXT PRIMARY KEY, name TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, sort_order INTEGER NOT NULL DEFAULT 0,
         is_enabled INTEGER NOT NULL DEFAULT 1, seo_title TEXT, seo_description TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT
