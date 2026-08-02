@@ -15,7 +15,8 @@ export async function POST(request: Request) {
     const response = NextResponse.json({ success: true, data: { name: login.user.name, role: login.user.role }, requestId });
     response.cookies.set(cookieName, await createAdminSession(login.user, parsed.data.remember), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: parsed.data.remember ? 60 * 60 * 24 * 30 : 60 * 60 * 8 });
     return response;
-  } catch {
+  } catch (error) {
+    console.error(JSON.stringify({ level: "error", route: "/api/admin/session", requestId, error: error instanceof Error ? error.message : String(error) }));
     return NextResponse.json({ success: false, error: "登录服务暂时不可用，请稍后再试。", requestId }, { status: 503 });
   }
 }

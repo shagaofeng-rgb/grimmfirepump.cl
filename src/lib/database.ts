@@ -1,28 +1,58 @@
 import { randomUUID } from "node:crypto";
-import { createClient, type Client, type InStatement } from "@libsql/client";
+import { createClient, type InStatement } from "@libsql/client";
+import { Pool } from "@neondatabase/serverless";
 
-let client: Client | undefined;
+type DatabaseResult = { rows: Record<string, unknown>[] };
+type DatabaseClient = {
+  execute(statement: string | InStatement): Promise<DatabaseResult>;
+  executeMultiple(sql: string): Promise<void>;
+};
+
+class NeonDatabaseClient implements DatabaseClient {
+  private readonly pool: Pool;
+
+  constructor(connectionString: string) {
+    this.pool = new Pool({ connectionString, max: 1 });
+  }
+
+  async execute(statement: string | InStatement) {
+    const sql = typeof statement === "string" ? statement : statement.sql;
+    const args = typeof statement === "string" ? [] : Object.values(statement.args || {});
+    let parameter = 0;
+    const postgresSql = sql.replace(/\?/g, () => `$${++parameter}`);
+    const result = await this.pool.query(postgresSql, args as unknown[]);
+    return { rows: result.rows as Record<string, unknown>[] };
+  }
+
+  async executeMultiple(sql: string) {
+    await this.pool.query(sql);
+  }
+}
+
+let client: DatabaseClient | undefined;
 let initialized = false;
 
 function getClient() {
   if (!client) {
-    client = createClient({
-      url: process.env.DATABASE_URL || "file:./data/grimm-latam.db",
-      authToken: process.env.DATABASE_AUTH_TOKEN,
-    });
+    const url = process.env.DATABASE_URL;
+    if (url?.startsWith("postgres")) client = new NeonDatabaseClient(url);
+    else {
+      if (process.env.VERCEL) throw new Error("DATABASE_URL is required for the production admin database");
+      client = createClient({ url: url || "file:./data/grimm-latam.db", authToken: process.env.DATABASE_AUTH_TOKEN }) as unknown as DatabaseClient;
+    }
   }
   return client;
 }
 
-async function ensureColumn(db: Client, statement: string) {
+async function ensureColumn(db: DatabaseClient, statement: string) {
   try { await db.execute(statement); } catch { /* The local database may already contain this additive column. */ }
 }
 
-async function seedRolesAndAdmin(db: Client) {
+async function seedRolesAndAdmin(db: DatabaseClient) {
   const now = new Date().toISOString();
   const roles = ["super_admin", "admin", "editor", "marketing", "sales", "analyst", "viewer"];
   for (const role of roles) {
-    await db.execute({ sql: "INSERT OR IGNORE INTO roles (id, name, label, created_at) VALUES (?, ?, ?, ?)", args: [role, role, role, now] });
+    await db.execute({ sql: "INSERT INTO roles (id, name, label, created_at) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO NOTHING", args: [role, role, role, now] });
   }
 
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
@@ -41,7 +71,6 @@ export async function getDatabase() {
   const db = getClient();
   if (!initialized) {
     await db.executeMultiple(`
-      PRAGMA foreign_keys = ON;
       CREATE TABLE IF NOT EXISTS roles (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, label TEXT NOT NULL, created_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY, email TEXT NOT NULL UNIQUE, name TEXT NOT NULL, password_hash TEXT NOT NULL,
