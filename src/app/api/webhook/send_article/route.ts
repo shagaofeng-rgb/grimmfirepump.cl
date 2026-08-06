@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const requestSchema = z.object({
-  sign: z.string().min(24).max(512),
+  sign: z.string().min(1).max(512),
   class_id: z.string().trim().min(1).max(80).optional().default("blog"),
   title: z.string().trim().min(2).max(220),
   content: z.string().trim().min(10).max(80000),
@@ -44,8 +44,15 @@ export async function POST(request: Request) {
   const configuredSecret = process.env.WEBHOOK_ARTICLE_SIGN;
   if (!configuredSecret) return response(0, "发布服务未配置", 503);
   try {
-    const input = requestSchema.parse(await readPayload(request));
-    if (!safeEqual(input.sign, configuredSecret)) return response(0, "秘钥错误", 401);
+    const payload = await readPayload(request);
+    const sign = typeof payload.sign === "string" ? payload.sign : "";
+    if (!sign || !safeEqual(sign, configuredSecret)) return response(0, "秘钥错误", 401);
+    const hasTitle = typeof payload.title === "string" && payload.title.trim().length > 0;
+    const hasContent = typeof payload.content === "string" && payload.content.trim().length > 0;
+    // The publishing plugin calls this route once with only sign/class_id before saving its configuration.
+    // Treat that authenticated, non-writing probe as a successful connection check.
+    if (!hasTitle && !hasContent) return response(1, "验证成功");
+    const input = requestSchema.parse(payload);
     const fingerprint = createHash("sha256").update(`${input.class_id}\u0000${input.title}\u0000${input.content}`).digest("hex");
     const db = await getDatabase();
     const duplicate = await db.execute({ sql: "SELECT id FROM news_articles WHERE external_fingerprint=? AND deleted_at IS NULL", args: [fingerprint] });
