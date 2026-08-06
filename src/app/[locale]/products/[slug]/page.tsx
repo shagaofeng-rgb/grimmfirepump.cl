@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getPublicProducts } from "@/lib/public-catalog";
 import { siteConfig, type Locale } from "@/lib/site-config";
 
 export const dynamic = "force-dynamic";
+export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> { const { locale, slug } = await params; return { alternates: { canonical: `/${locale}/products/${slug}`, languages: { es: `/es/products/${slug}`, pt: `/pt/products/${slug}`, en: `/en/products/${slug}`, "x-default": `/es/products/${slug}` } } }; }
 
 export default async function ProductPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await params;

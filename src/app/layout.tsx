@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://grimmfirepump.cl"),
   title: "GRIMM PUMP | Sistemas contra incendio para Sudamérica",
   description: "Paquetes de bombeo contra incendio configurados para proyectos industriales y comerciales en Sudamérica.",
   icons: {

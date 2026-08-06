@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Image from "next/image";
 import { LeadForm } from "@/components/lead-form";
 import { getPublicProducts } from "@/lib/public-catalog";
@@ -6,6 +7,7 @@ import { siteConfig, type Locale } from "@/lib/site-config";
 
 export function generateStaticParams() { return siteConfig.supportedLocales.map((locale) => ({ locale })); }
 export const dynamic = "force-dynamic";
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> { const { locale } = await params; return { alternates: { canonical: `/${locale}`, languages: { es: "/es", pt: "/pt", en: "/en", "x-default": "/es" } } }; }
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!siteConfig.supportedLocales.includes(locale as Locale)) notFound();
