@@ -148,6 +148,7 @@ export async function getDatabase() {
       CREATE TABLE IF NOT EXISTS news_articles (
         id TEXT PRIMARY KEY, category_id TEXT, status TEXT NOT NULL DEFAULT 'draft', is_featured INTEGER NOT NULL DEFAULT 0,
         sort_order INTEGER NOT NULL DEFAULT 0, published_at TEXT, scheduled_at TEXT, author_id TEXT,
+        external_fingerprint TEXT, external_author_id TEXT, cover_image_url TEXT,
         created_at TEXT NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT,
         FOREIGN KEY(category_id) REFERENCES news_categories(id), FOREIGN KEY(author_id) REFERENCES users(id)
       );
@@ -210,7 +211,11 @@ export async function getDatabase() {
     await ensureColumn(db, "ALTER TABLE audit_logs ADD COLUMN ip_hash TEXT");
     await ensureColumn(db, "ALTER TABLE audit_logs ADD COLUMN user_agent TEXT");
     await ensureColumn(db, "ALTER TABLE audit_logs ADD COLUMN result TEXT NOT NULL DEFAULT 'success'");
+    await ensureColumn(db, "ALTER TABLE news_articles ADD COLUMN external_fingerprint TEXT");
+    await ensureColumn(db, "ALTER TABLE news_articles ADD COLUMN external_author_id TEXT");
+    await ensureColumn(db, "ALTER TABLE news_articles ADD COLUMN cover_image_url TEXT");
     await db.execute("CREATE INDEX IF NOT EXISTS audit_logs_actor_idx ON audit_logs(actor_id, created_at)");
+    await db.execute("CREATE UNIQUE INDEX IF NOT EXISTS news_articles_external_fingerprint_unique ON news_articles(external_fingerprint) WHERE external_fingerprint IS NOT NULL");
     await seedRolesAndAdmin(db);
     await migrateLegacyCatalog(db);
     initialized = true;
