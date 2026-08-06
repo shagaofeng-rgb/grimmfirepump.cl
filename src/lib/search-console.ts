@@ -29,6 +29,16 @@ export async function syncSearchConsole(initiatedBy?: string) {
   const { credential, property } = configuration();
   const db = await getDatabase();
   const now = new Date(); const startedAt = now.toISOString();
+  if (!initiatedBy) {
+    const latest = await db.execute({ sql: "SELECT started_at FROM sync_runs WHERE source='google_search_console' AND run_type='scheduled' AND status='success' ORDER BY started_at DESC LIMIT 1" });
+    const lastScheduledAt = latest.rows[0]?.started_at ? new Date(String(latest.rows[0].started_at)) : null;
+    if (lastScheduledAt && now.getTime() - lastScheduledAt.getTime() < 72 * 60 * 60_000) {
+      const id = crypto.randomUUID();
+      await db.execute({ sql: "INSERT INTO sync_runs (id,source,run_type,status,started_at,finished_at,records_processed,error_code,error_message) VALUES (?,?,?,?,?,?,?,?,?)", args: [id, "google_search_console", "scheduled", "skipped", startedAt, startedAt, 0, "cadence_guard", "Skipped because the last successful scheduled sync is less than 72 hours old."] });
+      await writeAudit({ action: "search_console_sync_skipped", entityType: "sync", entityId: id, details: { reason: "cadence_guard", lastScheduledAt: lastScheduledAt.toISOString() } });
+      return { id, records: 0, skipped: true, reason: "cadence_guard", lastScheduledAt: lastScheduledAt.toISOString() };
+    }
+  }
   const running = await db.execute({ sql: "SELECT id FROM sync_runs WHERE source='google_search_console' AND status='running' AND started_at > ? LIMIT 1", args: [new Date(now.getTime() - 20 * 60_000).toISOString()] });
   if (running.rows.length) throw new Error("search_console_sync_already_running");
   const id = crypto.randomUUID();

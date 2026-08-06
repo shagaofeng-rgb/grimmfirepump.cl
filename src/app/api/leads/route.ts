@@ -15,7 +15,10 @@ const leadSchema = z.object({
 export async function POST(request: Request) {
   const requestId = randomUUID();
   try {
-    const parsed = leadSchema.safeParse(await request.json());
+    let body: unknown;
+    try { body = await request.json(); }
+    catch { return NextResponse.json({ success: false, error: "Datos de solicitud no válidos.", requestId }, { status: 400 }); }
+    const parsed = leadSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ success: false, error: "Datos de solicitud no válidos.", requestId, fields: parsed.error.flatten().fieldErrors }, { status: 400 });
     const lead = parsed.data;
     const db = await getDatabase(); const id = randomUUID(); const now = new Date().toISOString();

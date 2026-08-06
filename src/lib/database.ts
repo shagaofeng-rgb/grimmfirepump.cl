@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createClient, type InStatement } from "@libsql/client";
 import { Pool } from "@neondatabase/serverless";
+import { products as legacyProducts } from "@/lib/products";
 
 type DatabaseResult = { rows: Record<string, unknown>[] };
 type DatabaseClient = {
@@ -65,6 +66,22 @@ async function seedRolesAndAdmin(db: DatabaseClient) {
     sql: "INSERT INTO users (id, email, name, password_hash, role, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     args: [randomUUID(), email, "初始超级管理员", await hash(password, 12), "super_admin", "active", now, now],
   });
+}
+
+async function migrateLegacyCatalog(db: DatabaseClient) {
+  const existing = await db.execute("SELECT COUNT(*) AS total FROM products WHERE deleted_at IS NULL");
+  if (Number(existing.rows[0]?.total || 0) > 0) return;
+  const now = new Date().toISOString(); const categories = new Map<string, string>();
+  for (const product of legacyProducts) {
+    let categoryId = categories.get(product.category);
+    if (!categoryId) {
+      categoryId = randomUUID(); categories.set(product.category, categoryId);
+      await db.execute({ sql: "INSERT INTO product_categories (id,name,slug,sort_order,is_enabled,show_in_nav,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)", args: [categoryId, product.category, product.category.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || `category-${categories.size}`, categories.size, 1, 1, now, now] });
+    }
+    const id = randomUUID(); const specs = Object.fromEntries(product.specs);
+    await db.execute({ sql: "INSERT INTO products (id,category_id,status,is_featured,sort_order,technical_specs,created_at,updated_at,published_at) VALUES (?,?,?,?,?,?,?,?,?)", args: [id, categoryId, "published", 1, categories.size, JSON.stringify(specs), now, now, now] });
+    await db.execute({ sql: "INSERT INTO product_translations (id,product_id,locale,name,slug,short_description,content,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)", args: [randomUUID(), id, "es", product.name, product.slug, product.description, null, now, now] });
+  }
 }
 
 export async function getDatabase() {
@@ -195,6 +212,7 @@ export async function getDatabase() {
     await ensureColumn(db, "ALTER TABLE audit_logs ADD COLUMN result TEXT NOT NULL DEFAULT 'success'");
     await db.execute("CREATE INDEX IF NOT EXISTS audit_logs_actor_idx ON audit_logs(actor_id, created_at)");
     await seedRolesAndAdmin(db);
+    await migrateLegacyCatalog(db);
     initialized = true;
   }
   return db;

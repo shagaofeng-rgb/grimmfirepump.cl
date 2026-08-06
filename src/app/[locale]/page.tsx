@@ -1,14 +1,16 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { LeadForm } from "@/components/lead-form";
-import { products } from "@/lib/products";
+import { getPublicProducts } from "@/lib/public-catalog";
 import { siteConfig, type Locale } from "@/lib/site-config";
 
 export function generateStaticParams() { return siteConfig.supportedLocales.map((locale) => ({ locale })); }
+export const dynamic = "force-dynamic";
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!siteConfig.supportedLocales.includes(locale as Locale)) notFound();
   const activeLocale = locale as Locale;
+  const products = await getPublicProducts();
   return <main>
     <div className="topbar"><div className="shell topbar-inner"><span>Soporte de ingeniería para proyectos en Sudamérica</span><a href={siteConfig.whatsappUrl} target="_blank" rel="noreferrer">WhatsApp {siteConfig.whatsapp} ↗</a></div></div>
     <header className="header"><div className="shell nav"><a className="brand" href={`/${locale}`}><span className="brand-mark"><i/><i/><i/></span><span>GRIMM <b>PUMP</b><small>SISTEMAS CONTRA INCENDIO</small></span></a><nav className="menu"><a href="#productos">Productos</a><a href="#soluciones">Soluciones</a><a href="#proceso">Para proyectos</a><a href="#empresa">Empresa</a><a href="#contacto">Contacto</a></nav><a className="btn btn-small" href="#contacto">Solicitar cotización →</a></div></header>

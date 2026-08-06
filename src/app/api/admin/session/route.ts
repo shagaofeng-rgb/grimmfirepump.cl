@@ -8,7 +8,10 @@ const loginSchema = z.object({ email: z.string().trim().email().max(160), passwo
 export async function POST(request: Request) {
   const requestId = randomUUID();
   try {
-    const parsed = loginSchema.safeParse(await request.json());
+    let body: unknown;
+    try { body = await request.json(); }
+    catch { return NextResponse.json({ success: false, error: "请求格式无效。", requestId }, { status: 400 }); }
+    const parsed = loginSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ success: false, error: "请填写有效的账号和密码。", requestId, fields: parsed.error.flatten().fieldErrors }, { status: 400 });
     const login = await authenticateAdmin({ email: parsed.data.email, password: parsed.data.password, ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null, userAgent: request.headers.get("user-agent") });
     if (!login.ok) return NextResponse.json({ success: false, error: login.reason, requestId }, { status: 401 });
