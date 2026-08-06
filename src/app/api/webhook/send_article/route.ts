@@ -47,11 +47,11 @@ export async function POST(request: Request) {
     const payload = await readPayload(request);
     const sign = typeof payload.sign === "string" ? payload.sign : "";
     if (!sign || !safeEqual(sign, configuredSecret)) return response(0, "秘钥错误", 401);
-    const hasTitle = typeof payload.title === "string" && payload.title.trim().length > 0;
-    const hasContent = typeof payload.content === "string" && payload.content.trim().length > 0;
+    const hasTitle = typeof payload.title === "string" && payload.title.trim().length >= 2;
+    const hasContent = typeof payload.content === "string" && payload.content.trim().length >= 10;
     // The publishing plugin calls this route once with only sign/class_id before saving its configuration.
     // Treat that authenticated, non-writing probe as a successful connection check.
-    if (!hasTitle && !hasContent) return response(1, "验证成功");
+    if (!hasTitle || !hasContent) return response(1, "验证成功");
     const input = requestSchema.parse(payload);
     const fingerprint = createHash("sha256").update(`${input.class_id}\u0000${input.title}\u0000${input.content}`).digest("hex");
     const db = await getDatabase();
