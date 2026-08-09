@@ -1,9 +1,2 @@
 import type { MetadataRoute } from "next";
-
-export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/admin", "/api/"] }],
-    sitemap: "https://grimmfirepump.cl/sitemap.xml",
-    host: "https://grimmfirepump.cl",
-  };
-}
+export default function robots(): MetadataRoute.Robots { const rules: MetadataRoute.Robots["rules"] = [{ userAgent: "*", allow: "/", disallow: ["/admin", "/api/"] }, { userAgent: "Googlebot", allow: "/" }, { userAgent: "Bingbot", allow: "/" }, { userAgent: "OAI-SearchBot", allow: "/" }, { userAgent: "PerplexityBot", allow: "/" }]; if (process.env.ALLOW_GPTBOT === "true") rules.push({ userAgent: "GPTBot", allow: "/" }); else rules.push({ userAgent: "GPTBot", disallow: "/" }); return { rules, sitemap: "https://grimmfirepump.cl/sitemap.xml", host: "https://grimmfirepump.cl" }; }

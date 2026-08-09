@@ -8,6 +8,10 @@ export function proxy(request: NextRequest) {
   if (request.method === "POST" && request.nextUrl.pathname === "/") {
     return NextResponse.rewrite(new URL("/api/webhook/send_article", request.url));
   }
+  if ((request.method === "GET" || request.method === "HEAD") && request.nextUrl.pathname === "/") {
+    const target = request.nextUrl.clone(); target.pathname = "/es";
+    return NextResponse.redirect(target, 301);
+  }
   return NextResponse.next();
 }
 
