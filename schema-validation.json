@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-08-09",
+  "method": "Next.js production build plus JSON serialization review",
+  "result": "pass",
+  "templates": [
+    {
+      "path": "/es",
+      "types": ["Organization", "WebSite", "FAQPage"],
+      "result": "valid JSON generated from server-side objects"
+    },
+    {
+      "path": "/es/productos/[slug]",
+      "types": ["BreadcrumbList", "Product", "FAQPage"],
+      "result": "valid JSON generated; Product intentionally has no Offer or AggregateRating"
+    },
+    {
+      "path": "/es/soluciones/[slug]",
+      "types": ["BreadcrumbList", "FAQPage"],
+      "result": "valid JSON generated from visible page content"
+    },
+    {
+      "path": "/es/[section]",
+      "types": ["BreadcrumbList"],
+      "result": "valid JSON generated"
+    }
+  ],
+  "limitations": [
+    "This verifies JSON construction and build success, not an external Rich Results Test result.",
+    "External search-engine eligibility is not guaranteed by valid markup."
+  ]
+}

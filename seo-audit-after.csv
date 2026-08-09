@@ -1,0 +1,18 @@
+url,status,canonical,indexing,language,primary_change,verification
+https://grimmfirepump.cl/,301,https://grimmfirepump.cl/es,indexable-redirect,es-CL,Root redirect normalized,production HTTP 2026-08-09
+https://grimmfirepump.cl/es,200,https://grimmfirepump.cl/es,indexable,es-CL,Chile Spanish home and internal-link hub,build plus production HTTP
+https://grimmfirepump.cl/es/productos,200,https://grimmfirepump.cl/es/productos,indexable,es-CL,Product collection,build route
+https://grimmfirepump.cl/es/productos/sistema-bomba-incendio-edj,200,self,indexable,es-CL,EDJ product content and schema,production HTTP
+https://grimmfirepump.cl/es/productos/bomba-diesel-contra-incendio,200,self,indexable,es-CL,Diesel product content and schema,build route
+https://grimmfirepump.cl/es/productos/bomba-electrica-contra-incendio,200,self,indexable,es-CL,Electric product content and schema,build route
+https://grimmfirepump.cl/es/productos/bomba-jockey-contra-incendio,200,self,indexable,es-CL,Jockey product content and schema,build route
+https://grimmfirepump.cl/es/productos/bomba-incendio-eje-largo,200,self,indexable,es-CL,Vertical turbine product content and schema,build route
+https://grimmfirepump.cl/es/soluciones,200,self,indexable,es-CL,Solution collection,build route
+https://grimmfirepump.cl/es/soluciones/bombas-contra-incendio-bodegas,200,self,indexable,es-CL,Warehouse solution,build route
+https://grimmfirepump.cl/es/soluciones/bombas-contra-incendio-plantas-industriales,200,self,indexable,es-CL,Industrial plant solution,build route
+https://grimmfirepump.cl/es/soluciones/bombas-contra-incendio-centros-datos,200,self,indexable,es-CL,Data-center solution,build route
+https://grimmfirepump.cl/es/soluciones/bombas-contra-incendio-petroleo-gas,200,self,indexable,es-CL,Oil gas remote solution,build route
+https://grimmfirepump.cl/en,200,self,noindex-follow,en,Language preparation notice,production HTTP; metadata source
+https://grimmfirepump.cl/pt,200,self,noindex-follow,pt-BR,Language preparation notice,production HTTP; metadata source
+https://grimmfirepump.cl/es/products,308,https://grimmfirepump.cl/es/productos,legacy-redirect,es-CL,Legacy product collection preserved,production HTTP
+https://grimmfirepump.cl/es/blog,200,self,indexable,es-CL,Existing Blog route preserved,production HTTP

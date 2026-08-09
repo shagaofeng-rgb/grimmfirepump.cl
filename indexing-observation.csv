@@ -1,2 +1,7 @@
 date,url,source,observation,status
-2026-08-09,https://grimmfirepump.cl/es,baseline,Public HTTP baseline captured,needs-owner-verification
+2026-08-09,https://grimmfirepump.cl/es,production-http,HTTP 200 after Spanish content architecture deployment,observable
+2026-08-09,https://grimmfirepump.cl/,production-http,HTTP 301 to /es,observable
+2026-08-09,https://grimmfirepump.cl/en,metadata-and-http,Language preparation page is reachable and configured noindex follow,observable
+2026-08-09,https://grimmfirepump.cl/pt,metadata-and-http,Language preparation page is reachable and configured noindex follow,observable
+2026-08-09,https://grimmfirepump.cl/sitemap.xml,production-http,Canonical Spanish sitemap endpoint returns 200,observable
+2026-08-09,https://grimmfirepump.cl,Search Console and Bing,Index coverage and crawl state require owner console access,needs-owner-verification

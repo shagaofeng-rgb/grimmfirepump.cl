@@ -1,0 +1,17 @@
+2026-08-09T13:45:00+08:00 sitemap and robots validation
+
+Production endpoint checks
+- GET https://grimmfirepump.cl/robots.txt => 200
+- GET https://grimmfirepump.cl/sitemap.xml => 200
+
+Source checks
+- sitemap source emits only Spanish canonical public URLs.
+- /en and /pt are excluded because they are noindex,follow preparation pages.
+- legacy /es/products URLs are excluded because they permanently redirect to /es/productos.
+- robots permits Googlebot, Bingbot, OAI-SearchBot and PerplexityBot for public pages.
+- GPTBot is denied unless ALLOW_GPTBOT=true is set in the deployment environment.
+- /admin and /api are disallowed from crawling.
+
+Limitations
+- Search Console and Bing Webmaster Tools submissions were not performed from this environment.
+- A sitemap response does not prove crawler discovery or index inclusion.
