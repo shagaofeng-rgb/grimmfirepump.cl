@@ -6,7 +6,7 @@ Date: 2026-08-09
 
 - Production build generated successfully with 73 public/static route outputs.
 - Chrome headless local renders were captured for `/es` at 360, 375, 390, 768, 1024, 1280 and 1440px.
-- The first 390px render exposed a narrow-screen overflow in the hero/header. CSS was corrected with mobile grid containment, word wrapping, viewport-safe shell sizing and a smaller mobile title scale; a final 390px render was captured after the correction source change.
+- The first 390px render exposed a narrow-screen overflow in the hero/header. CSS was corrected with mobile grid containment, word wrapping, viewport-safe shell sizing and a smaller mobile title scale. The final production build includes an additional containment rule; it should be re-screenshot after any future media change.
 
 ## Implemented breakpoint behavior
 
