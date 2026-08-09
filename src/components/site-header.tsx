@@ -3,12 +3,51 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-const products = [["Sistema EDJ", "/es/productos/sistema-bomba-incendio-edj"], ["Bomba diésel", "/es/productos/bomba-diesel-contra-incendio"], ["Bomba eléctrica", "/es/productos/bomba-electrica-contra-incendio"], ["Bomba jockey", "/es/productos/bomba-jockey-contra-incendio"], ["Bomba de eje largo", "/es/productos/bomba-incendio-eje-largo"]] as const;
-const solutions = [["Bodegas y logística", "/es/soluciones/bombas-contra-incendio-bodegas"], ["Plantas industriales", "/es/soluciones/bombas-contra-incendio-plantas-industriales"], ["Centros de datos", "/es/soluciones/bombas-contra-incendio-centros-datos"], ["Petróleo, gas y sitios remotos", "/es/soluciones/bombas-contra-incendio-petroleo-gas"]] as const;
+const products = [
+  ["Sistema EDJ", "/es/productos/sistema-bomba-incendio-edj"],
+  ["Bomba diésel", "/es/productos/bomba-diesel-contra-incendio"],
+  ["Bomba eléctrica", "/es/productos/bomba-electrica-contra-incendio"],
+  ["Bomba jockey", "/es/productos/bomba-jockey-contra-incendio"],
+  ["Bomba de eje largo", "/es/productos/bomba-incendio-eje-largo"],
+] as const;
+
+const solutions = [
+  ["Bodegas y logística", "/es/soluciones/bombas-contra-incendio-bodegas"],
+  ["Plantas industriales", "/es/soluciones/bombas-contra-incendio-plantas-industriales"],
+  ["Centros de datos", "/es/soluciones/bombas-contra-incendio-centros-datos"],
+  ["Petróleo, gas y sitios remotos", "/es/soluciones/bombas-contra-incendio-petroleo-gas"],
+] as const;
 
 export function SiteHeader() {
-  const [open, setOpen] = useState(false); const triggerRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => { if (!open) return; const trigger = triggerRef.current; const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); }; document.addEventListener("keydown", onKey); const previous = document.body.style.overflow; document.body.style.overflow = "hidden"; return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = previous; trigger?.focus(); }; }, [open]);
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const trigger = triggerRef.current;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      trigger?.focus();
+    };
+  }, [open]);
+
   const close = () => setOpen(false);
-  return <header className="site-header"><div className="shell site-nav"><Link className="brand" href="/es"><span className="brand-mark" aria-hidden="true"/><span>GRIMM <b>PUMP</b><small>SISTEMAS DE BOMBEO</small></span></Link><nav className="desktop-nav" aria-label="Navegación principal"><div className="nav-menu"><Link href="/es/productos">Productos</Link><div className="mega-menu"><div><p>Por sistema</p>{products.map(([name, href]) => <Link key={href} href={href}>{name}</Link>)}</div><div><p>Por proyecto</p>{solutions.slice(0, 3).map(([name, href]) => <Link key={href} href={href}>{name}</Link>)}</div><div className="mega-cta"><b>¿Está preparando un proyecto?</b><span>Comparta caudal, presión y condiciones de instalación.</span><Link className="btn" href="/es/contacto">Solicitar cotización</Link></div></div></div><div className="nav-menu"><Link href="/es/soluciones">Soluciones</Link><div className="sub-menu">{solutions.map(([name, href]) => <Link key={href} href={href}>{name}</Link>)}</div></div><Link href="/es/guias">Guías</Link><Link href="/es/empresa">Empresa</Link><Link href="/es/contacto">Contacto</Link></nav><Link className="btn nav-quote" href="/es/contacto">Solicitar cotización</Link><button ref={triggerRef} className="menu-toggle" type="button" aria-expanded={open} aria-controls="mobile-navigation" onClick={() => setOpen(true)}>Menú</button></div>{open ? <div className="mobile-overlay" onClick={close}><nav id="mobile-navigation" className="mobile-drawer" aria-label="Navegación móvil" onClick={(event) => event.stopPropagation()}><div className="drawer-top"><b>Menú</b><button type="button" onClick={close}>Cerrar</button></div><Link href="/es/productos" onClick={close}>Productos</Link><details><summary>Ver categorías</summary>{products.map(([name, href]) => <Link key={href} href={href} onClick={close}>{name}</Link>)}</details><Link href="/es/soluciones" onClick={close}>Soluciones</Link><details><summary>Ver industrias</summary>{solutions.map(([name, href]) => <Link key={href} href={href} onClick={close}>{name}</Link>)}</details><Link href="/es/guias" onClick={close}>Guías</Link><Link href="/es/empresa" onClick={close}>Empresa</Link><Link href="/es/contacto" onClick={close}>Contacto</Link><Link className="btn" href="/es/contacto" onClick={close}>Solicitar cotización</Link><p>Español - Chile</p></nav></div> : null}</header>;
+
+  return <header className="site-header"><div className="shell site-nav">
+    <Link className="brand" href="/es"><span className="brand-mark" aria-hidden="true" /><span>GRIMM <b>PUMP</b><small>SISTEMAS DE BOMBEO</small></span></Link>
+    <nav className="desktop-nav" aria-label="Navegación principal">
+      <div className="nav-menu"><Link href="/es/productos">Productos</Link><div className="mega-menu"><div><p>Por sistema</p>{products.map(([name, href]) => <Link key={href} href={href}>{name}</Link>)}</div><div><p>Por proyecto</p>{solutions.slice(0, 3).map(([name, href]) => <Link key={href} href={href}>{name}</Link>)}</div><div className="mega-cta"><b>¿Está preparando un proyecto?</b><span>Comparta caudal, presión y condiciones de instalación.</span><Link className="btn" href="/es/contacto">Solicitar cotización</Link></div></div></div>
+      <div className="nav-menu"><Link href="/es/soluciones">Soluciones</Link><div className="sub-menu">{solutions.map(([name, href]) => <Link key={href} href={href}>{name}</Link>)}</div></div>
+      <Link href="/es/guias">Guías</Link><Link href="/es/empresa">Empresa</Link><Link href="/es/contacto">Contacto</Link>
+    </nav>
+    <Link className="btn nav-quote" href="/es/contacto">Solicitar cotización</Link>
+    <button ref={triggerRef} className="menu-toggle" type="button" aria-expanded={open} aria-controls="mobile-navigation" onClick={() => setOpen(true)}><span className="menu-icon" aria-hidden="true" /><span>Menú</span></button>
+  </div>{open ? <div className="mobile-overlay" onClick={close}><nav id="mobile-navigation" className="mobile-drawer" aria-label="Navegación móvil" onClick={(event) => event.stopPropagation()}><div className="drawer-top"><b>Menú</b><button type="button" onClick={close}>Cerrar</button></div><Link href="/es/productos" onClick={close}>Productos</Link><details><summary>Ver categorías</summary>{products.map(([name, href]) => <Link key={href} href={href} onClick={close}>{name}</Link>)}</details><Link href="/es/soluciones" onClick={close}>Soluciones</Link><details><summary>Ver industrias</summary>{solutions.map(([name, href]) => <Link key={href} href={href} onClick={close}>{name}</Link>)}</details><Link href="/es/guias" onClick={close}>Guías</Link><Link href="/es/empresa" onClick={close}>Empresa</Link><Link href="/es/contacto" onClick={close}>Contacto</Link><Link className="btn" href="/es/contacto" onClick={close}>Solicitar cotización</Link><p>Español · Chile</p></nav></div> : null}</header>;
 }

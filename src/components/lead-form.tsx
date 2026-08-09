@@ -1,13 +1,57 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 "use client";
+
 import { FormEvent, useState } from "react";
 
 export function LeadForm({ locale }: { locale: "es" | "pt" | "en" }) {
   const [state, setState] = useState<"idle" | "sending" | "success" | "error">("idle");
+
   async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setState("sending"); const form = new FormData(event.currentTarget); const payload = Object.fromEntries(form.entries());
-    const response = await fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, locale, sourcePath: window.location.pathname }) });
-    if (response.ok) { event.currentTarget.reset(); setState("success"); } else setState("error");
+    event.preventDefault();
+    setState("sending");
+    const form = new FormData(event.currentTarget);
+    const payload = Object.fromEntries(form.entries());
+
+    try {
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, locale, sourcePath: window.location.pathname }),
+      });
+
+      if (response.ok) {
+        event.currentTarget.reset();
+        setState("success");
+      } else {
+        setState("error");
+      }
+    } catch {
+      setState("error");
+    }
   }
-  return <form className="quote-form" onSubmit={submit} noValidate aria-describedby="privacy-note"><div className="form-row"><div><label htmlFor="lead-name">Nombre</label><input id="lead-name" required name="name" autoComplete="name" placeholder="Su nombre" /></div><div><label htmlFor="lead-company">Empresa</label><input id="lead-company" required name="company" autoComplete="organization" placeholder="Nombre de la empresa" /></div></div><div className="form-row"><div><label htmlFor="lead-email">Email</label><input id="lead-email" required type="email" name="email" autoComplete="email" placeholder="nombre@empresa.com" /></div><div><label htmlFor="lead-country">País / región</label><select id="lead-country" required name="country" defaultValue=""><option value="" disabled>Seleccionar</option><option>Chile</option><option>Argentina</option><option>Brasil</option><option>Colombia</option><option>Perú</option><option>Otro país de Sudamérica</option></select></div></div><div><label htmlFor="lead-product">Interés de producto</label><select id="lead-product" name="productInterest" defaultValue=""><option value="">Seleccionar sistema</option><option>Sistema EDJ</option><option>Bomba diésel contra incendio</option><option>Bomba eléctrica contra incendio</option><option>Bomba jockey</option><option>Bomba de eje largo</option><option>Otro / necesito orientación</option></select></div><div className="form-row"><div><label htmlFor="lead-flow">Caudal</label><input id="lead-flow" name="flow" placeholder="Ej. 500 GPM" /></div><div><label htmlFor="lead-pressure">Presión / altura</label><input id="lead-pressure" name="pressure" placeholder="Ej. 10 bar" /></div></div><div><label htmlFor="lead-message">Requerimiento</label><textarea id="lead-message" required name="message" rows={4} minLength={10} placeholder="Aplicación, plazo y documentos necesarios." /></div><label className="consent" htmlFor="lead-consent"><input id="lead-consent" required type="checkbox" name="consent" value="accepted" /> <span>Acepto el uso de mis datos para responder esta solicitud.</span></label><p id="privacy-note" className="form-privacy">Al enviar, acepta la <a href="/es/politica-de-privacidad">política de privacidad</a>.</p><input className="honeypot" tabIndex={-1} autoComplete="off" name="website" aria-hidden="true" /><button className="btn" disabled={state === "sending"}>{state === "sending" ? "Enviando…" : "Enviar requerimiento →"}</button>{state === "success" && <p className="form-success" role="status">Solicitud guardada. Nuestro equipo se pondrá en contacto.</p>}{state === "error" && <p className="form-error" role="alert">No fue posible guardar la solicitud. Inténtelo nuevamente.</p>}</form>;
+
+  return (
+    <form className="quote-form" onSubmit={submit} noValidate aria-describedby="privacy-note" aria-busy={state === "sending"}>
+      <div className="form-row">
+        <div><label htmlFor="lead-name">Nombre</label><input id="lead-name" required name="name" autoComplete="name" placeholder="Su nombre" /></div>
+        <div><label htmlFor="lead-company">Empresa</label><input id="lead-company" required name="company" autoComplete="organization" placeholder="Nombre de la empresa" /></div>
+      </div>
+      <div className="form-row">
+        <div><label htmlFor="lead-email">Email</label><input id="lead-email" required type="email" name="email" autoComplete="email" placeholder="nombre@empresa.com" /></div>
+        <div><label htmlFor="lead-country">País / región</label><select id="lead-country" required name="country" defaultValue=""><option value="" disabled>Seleccionar</option><option>Chile</option><option>Argentina</option><option>Brasil</option><option>Colombia</option><option>Perú</option><option>Otro país de Sudamérica</option></select></div>
+      </div>
+      <div><label htmlFor="lead-product">Interés de producto</label><select id="lead-product" name="productInterest" defaultValue=""><option value="">Seleccionar sistema</option><option>Sistema EDJ</option><option>Bomba diésel contra incendio</option><option>Bomba eléctrica contra incendio</option><option>Bomba jockey</option><option>Bomba de eje largo</option><option>Otro / necesito orientación</option></select></div>
+      <div className="form-row">
+        <div><label htmlFor="lead-flow">Caudal</label><input id="lead-flow" name="flow" placeholder="Ej. 500 GPM" /></div>
+        <div><label htmlFor="lead-pressure">Presión / altura</label><input id="lead-pressure" name="pressure" placeholder="Ej. 10 bar" /></div>
+      </div>
+      <div><label htmlFor="lead-message">Requerimiento</label><textarea id="lead-message" required name="message" rows={4} minLength={10} placeholder="Aplicación, plazo y documentos necesarios." /></div>
+      <label className="consent" htmlFor="lead-consent"><input id="lead-consent" required type="checkbox" name="consent" value="accepted" /> <span>Acepto el uso de mis datos para responder esta solicitud.</span></label>
+      <p id="privacy-note" className="form-privacy">Al enviar, acepta la <a href="/es/politica-de-privacidad">política de privacidad</a>.</p>
+      <input className="honeypot" tabIndex={-1} autoComplete="off" name="website" aria-hidden="true" />
+      <button className="btn" disabled={state === "sending"}>{state === "sending" ? "Enviando…" : "Enviar requerimiento →"}</button>
+      {state === "success" && <p className="form-success" role="status">Solicitud guardada. Nuestro equipo se pondrá en contacto.</p>}
+      {state === "error" && <p className="form-error" role="alert">No fue posible guardar la solicitud. Inténtelo nuevamente.</p>}
+    </form>
+  );
 }
