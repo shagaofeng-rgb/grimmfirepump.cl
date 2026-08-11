@@ -1,5 +1,6 @@
 import { getDatabase } from "@/lib/database";
 import { chileProducts, type ChileProduct } from "@/lib/chile-content";
+import { connection } from "next/server";
 
 type CatalogRow = {
   slug: string;
@@ -26,6 +27,10 @@ function readSpecifications(value: string | null, fallback: ChileProduct["verifi
  * admin model does not yet expose (FAQ, application checklist and relations).
  */
 export async function getChileCatalog(): Promise<ChileProduct[]> {
+  // The catalogue must reflect administrative changes on the next request.
+  // In Next.js 16, `connection()` explicitly prevents this database read from
+  // being captured in a prerendered shell or a route-level cache.
+  await connection();
   const db = await getDatabase();
   const result = await db.execute({
     sql: "SELECT t.slug,t.name,t.short_description,t.seo_title,p.technical_specs FROM products p JOIN product_translations t ON t.product_id=p.id AND t.locale='es' WHERE p.deleted_at IS NULL AND p.status='published' AND p.sku LIKE ? ORDER BY p.sort_order,p.created_at",
