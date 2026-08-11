@@ -1,0 +1,3 @@
+import { getDefaultNewsSite, getPublicNews } from "@/lib/industry-news";
+export const dynamic = "force-dynamic";
+export async function GET() { const site = await getDefaultNewsSite(); const articles = site ? await getPublicNews(site.siteId) : []; const body = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${articles.map((article) => `<url><loc>${String(article.canonical_url)}</loc><lastmod>${new Date(String(article.updated_at)).toISOString()}</lastmod></url>`).join("")}</urlset>`; return new Response(body, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "no-store" } }); }

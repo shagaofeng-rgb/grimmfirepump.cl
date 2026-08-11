@@ -1,0 +1,4 @@
+import { NextResponse } from "next/server";
+import { runNewsPublish } from "@/lib/industry-news";
+export const runtime = "nodejs"; export const dynamic = "force-dynamic";
+export async function GET(request: Request) { if (!process.env.CRON_SECRET || request.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) return NextResponse.json({ success: false, error: "unauthorized" }, { status: 401 }); try { const data = await runNewsPublish(); const successful = data.every((entry) => entry.status === "published_success" || entry.status === "already_published"); return NextResponse.json({ success: successful, phase: "publish_and_frontend_verify", data }, { status: successful ? 200 : 503, headers: { "cache-control": "no-store" } }); } catch { return NextResponse.json({ success: false, error: "news_publish_failed" }, { status: 503 }); } }

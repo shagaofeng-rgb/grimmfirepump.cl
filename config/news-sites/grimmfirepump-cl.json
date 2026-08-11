@@ -1,0 +1,58 @@
+{
+  "site_id": "grimmfirepump-cl",
+  "enabled": true,
+  "brand_name": "GRIMM PUMP",
+  "site_url": "https://grimmfirepump.cl",
+  "industry": "fire pump systems",
+  "industry_scope": "Sistemas de protección contra incendios, bombeo contra incendio, prevención, respuesta ante incendios, seguridad de instalaciones, continuidad operativa y requisitos de proyectos para Chile.",
+  "target_markets": ["CL"],
+  "publication_language": "es",
+  "locale": "es-CL",
+  "timezone": "America/Santiago",
+  "news": {
+    "list_route": "/es/noticias",
+    "detail_route_pattern": "/es/noticias/[slug]",
+    "rss_route": "/es/noticias/rss.xml",
+    "sitemap_route": "/news-sitemap.xml",
+    "desired_word_count": { "min": 700, "max": 1000 },
+    "ingest_interval_hours": 12,
+    "publish_interval_hours": 48,
+    "candidate_max_age_hours": 72,
+    "fallback_candidate_max_age_days": 7,
+    "min_score": 70,
+    "max_internal_product_links": 1,
+    "default_author_type": "Editorial Team"
+  },
+  "sources": {
+    "primary_whitelist": [
+      {
+        "domain": "www.cbs.cl",
+        "type": "fire-service",
+        "allowed_topics": ["incendio", "prevención", "seguridad", "emergencias", "bomberos"],
+        "allowed_languages": ["es"],
+        "rss_or_api_url": "https://www.cbs.cl/feed/",
+        "source_trust_score": 90
+      }
+    ],
+    "fallback_whitelist": [
+      {
+        "domain": "www.anapci.cl",
+        "type": "trade-association",
+        "allowed_topics": ["protección contra incendios", "seguridad", "normativa", "prevención"],
+        "allowed_languages": ["es"],
+        "rss_or_api_url": "https://www.anapci.cl/feed/",
+        "source_trust_score": 85
+      }
+    ]
+  },
+  "product_theme_plan": [
+    {
+      "theme_id": "edj-fire-pump-system",
+      "product_url": "/es/productos/sistema-bomba-incendio-edj",
+      "product_name": "Sistema de bomba contra incendio EDJ",
+      "start_at": "2026-01-01T00:00:00.000Z",
+      "end_at": "2030-12-31T23:59:59.000Z",
+      "status": "active"
+    }
+  ]
+}

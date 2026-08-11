@@ -202,6 +202,77 @@ export async function getDatabase() {
         FOREIGN KEY(actor_id) REFERENCES users(id)
       );
       CREATE INDEX IF NOT EXISTS audit_logs_created_at_idx ON audit_logs(created_at);
+      CREATE TABLE IF NOT EXISTS industry_news_sites (
+        site_id TEXT PRIMARY KEY, enabled INTEGER NOT NULL DEFAULT 0, brand_name TEXT NOT NULL, site_url TEXT NOT NULL,
+        industry TEXT NOT NULL, industry_scope TEXT NOT NULL, target_markets TEXT NOT NULL, publication_language TEXT NOT NULL,
+        locale TEXT NOT NULL, timezone TEXT NOT NULL, list_route TEXT NOT NULL, detail_route_pattern TEXT NOT NULL,
+        rss_route TEXT NOT NULL, sitemap_route TEXT NOT NULL, desired_word_min INTEGER NOT NULL DEFAULT 700,
+        desired_word_max INTEGER NOT NULL DEFAULT 1000, ingest_interval_hours INTEGER NOT NULL DEFAULT 12,
+        publish_interval_hours INTEGER NOT NULL DEFAULT 48, candidate_max_age_hours INTEGER NOT NULL DEFAULT 72,
+        fallback_candidate_max_age_days INTEGER NOT NULL DEFAULT 7, min_score INTEGER NOT NULL DEFAULT 70,
+        max_internal_product_links INTEGER NOT NULL DEFAULT 1, default_author_type TEXT NOT NULL DEFAULT 'Editorial Team',
+        require_frontend_verification INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS industry_news_sources (
+        id TEXT PRIMARY KEY, site_id TEXT NOT NULL, tier TEXT NOT NULL CHECK(tier IN ('primary','fallback')), domain TEXT NOT NULL,
+        source_type TEXT NOT NULL, allowed_topics TEXT NOT NULL, allowed_languages TEXT NOT NULL, feed_url TEXT NOT NULL,
+        source_trust_score INTEGER NOT NULL, is_enabled INTEGER NOT NULL DEFAULT 1, last_healthy_at TEXT,
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE(site_id, feed_url),
+        FOREIGN KEY(site_id) REFERENCES industry_news_sites(site_id) ON DELETE CASCADE
+      );
+      CREATE TABLE IF NOT EXISTS industry_news_theme_windows (
+        id TEXT PRIMARY KEY, site_id TEXT NOT NULL, theme_id TEXT NOT NULL, product_url TEXT NOT NULL, product_name TEXT NOT NULL,
+        start_at TEXT NOT NULL, end_at TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active', created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+        UNIQUE(site_id, theme_id), FOREIGN KEY(site_id) REFERENCES industry_news_sites(site_id) ON DELETE CASCADE
+      );
+      CREATE TABLE IF NOT EXISTS industry_news_ingest_runs (
+        id TEXT PRIMARY KEY, site_id TEXT NOT NULL, cycle_key TEXT NOT NULL, status TEXT NOT NULL, started_at TEXT NOT NULL, finished_at TEXT,
+        discovered_count INTEGER NOT NULL DEFAULT 0, candidate_count INTEGER NOT NULL DEFAULT 0, rejected_count INTEGER NOT NULL DEFAULT 0,
+        error_summary TEXT, created_at TEXT NOT NULL, UNIQUE(site_id, cycle_key),
+        FOREIGN KEY(site_id) REFERENCES industry_news_sites(site_id) ON DELETE CASCADE
+      );
+      CREATE TABLE IF NOT EXISTS industry_news_candidates (
+        id TEXT PRIMARY KEY, site_id TEXT NOT NULL, source_id TEXT NOT NULL, normalized_url TEXT NOT NULL, normalized_url_hash TEXT NOT NULL,
+        title TEXT NOT NULL, title_hash TEXT NOT NULL, summary TEXT, source_name TEXT NOT NULL, source_published_at TEXT NOT NULL,
+        source_author TEXT, language TEXT, media_url TEXT, image_rights_status TEXT NOT NULL DEFAULT 'unknown', industry_tags TEXT NOT NULL,
+        relevance_score INTEGER NOT NULL, status TEXT NOT NULL, reject_reason TEXT, content_fingerprint TEXT NOT NULL,
+        reserved_cycle_key TEXT, used_by_article_id TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+        UNIQUE(site_id, normalized_url_hash), UNIQUE(site_id, content_fingerprint),
+        FOREIGN KEY(site_id) REFERENCES industry_news_sites(site_id) ON DELETE CASCADE,
+        FOREIGN KEY(source_id) REFERENCES industry_news_sources(id) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS industry_news_candidates_select_idx ON industry_news_candidates(site_id,status,relevance_score,source_published_at);
+      CREATE TABLE IF NOT EXISTS industry_news_articles (
+        id TEXT PRIMARY KEY, site_id TEXT NOT NULL, candidate_id TEXT NOT NULL UNIQUE, status TEXT NOT NULL, slug TEXT NOT NULL,
+        title TEXT NOT NULL, deck TEXT NOT NULL, content TEXT NOT NULL, source_name TEXT NOT NULL, source_url TEXT NOT NULL,
+        source_published_at TEXT NOT NULL, source_author TEXT, image_url TEXT, image_rights_status TEXT NOT NULL,
+        editorial_disclaimer TEXT NOT NULL, product_url TEXT, product_name TEXT, seo_title TEXT NOT NULL, seo_description TEXT NOT NULL,
+        canonical_url TEXT NOT NULL, published_at TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, archived_at TEXT,
+        UNIQUE(site_id, slug), FOREIGN KEY(site_id) REFERENCES industry_news_sites(site_id) ON DELETE CASCADE,
+        FOREIGN KEY(candidate_id) REFERENCES industry_news_candidates(id) ON DELETE RESTRICT
+      );
+      CREATE INDEX IF NOT EXISTS industry_news_articles_public_idx ON industry_news_articles(site_id,status,published_at);
+      CREATE TABLE IF NOT EXISTS industry_news_publication_runs (
+        id TEXT PRIMARY KEY, site_id TEXT NOT NULL, cycle_key TEXT NOT NULL, status TEXT NOT NULL, candidate_id TEXT, article_id TEXT,
+        attempts INTEGER NOT NULL DEFAULT 0, started_at TEXT NOT NULL, finished_at TEXT, error_code TEXT, error_message TEXT,
+        idempotency_key TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE(site_id, cycle_key),
+        UNIQUE(site_id, idempotency_key), FOREIGN KEY(site_id) REFERENCES industry_news_sites(site_id) ON DELETE CASCADE
+      );
+      CREATE TABLE IF NOT EXISTS industry_news_delivery_checks (
+        id TEXT PRIMARY KEY, site_id TEXT NOT NULL, article_id TEXT NOT NULL, check_type TEXT NOT NULL, check_url TEXT NOT NULL,
+        http_status INTEGER, passed INTEGER NOT NULL, details TEXT, checked_at TEXT NOT NULL,
+        FOREIGN KEY(site_id) REFERENCES industry_news_sites(site_id) ON DELETE CASCADE,
+        FOREIGN KEY(article_id) REFERENCES industry_news_articles(id) ON DELETE CASCADE
+      );
+      CREATE TABLE IF NOT EXISTS industry_news_audit_events (
+        id TEXT PRIMARY KEY, site_id TEXT NOT NULL, event_type TEXT NOT NULL, entity_type TEXT, entity_id TEXT,
+        details TEXT, result TEXT NOT NULL, created_at TEXT NOT NULL,
+        FOREIGN KEY(site_id) REFERENCES industry_news_sites(site_id) ON DELETE CASCADE
+      );
+      CREATE TABLE IF NOT EXISTS industry_news_locks (
+        lock_key TEXT PRIMARY KEY, site_id TEXT NOT NULL, expires_at TEXT NOT NULL, heartbeat_at TEXT NOT NULL, created_at TEXT NOT NULL,
+        FOREIGN KEY(site_id) REFERENCES industry_news_sites(site_id) ON DELETE CASCADE
+      );
     `);
     await ensureColumn(db, "ALTER TABLE leads ADD COLUMN assignee_id TEXT");
     await ensureColumn(db, "ALTER TABLE leads ADD COLUMN tags TEXT");

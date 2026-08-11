@@ -1,5 +1,7 @@
 {
   "crons": [
-    { "path": "/api/cron/search-console", "schedule": "17 3 */3 * *" }
+    { "path": "/api/cron/search-console", "schedule": "17 3 */3 * *" },
+    { "path": "/api/cron/news-ingest", "schedule": "0 */12 * * *" },
+    { "path": "/api/cron/news-publish", "schedule": "10 6 */2 * *" }
   ]
 }

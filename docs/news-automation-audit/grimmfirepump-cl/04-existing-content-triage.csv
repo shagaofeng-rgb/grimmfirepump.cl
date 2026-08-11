@@ -1,0 +1,3 @@
+site_id,url,content_type,published_at,title,source_url,source_date,word_count,duplicate_cluster,similarity_score,index_status,decision,reason,redirect_target,rollback_method,reviewer
+grimmfirepump-cl,/es/blog,blog-list,,, ,,,legacy-blog,,index,keep,Existing connected Blog list; no News migration required,,Git rollback plus retained database rows,Codex
+grimmfirepump-cl,/es/blog/[slug],blog-article,,, ,,,legacy-blog,,index,keep,Existing Blog records remain untouched by News isolation,,Git rollback plus retained database rows,Codex
