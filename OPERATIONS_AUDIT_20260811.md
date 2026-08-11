@@ -108,3 +108,34 @@
 - 部署前验证（2026-08-11）：`npm run lint` 完成（0 error，2 条既有 Blog 远程 `<img>` 优化 warning）；`npm test` 为 2 个测试文件、5 个测试全部通过；`npm run build` 成功，生成 74 个路由页面。
 - 本地生产运行验证（2026-08-11）：`GET /favicon.ico` 返回 `308 Location: /icon.png`；`GET /icon.png` 返回 `200 image/png`。
 - 下一步：部署 Vercel Production 并在线验证 `/favicon.ico`、`/api/health`、Blog、sitemap。
+
+## 9. 后续修复与最终回归（2026-08-11）
+
+### 已完成
+
+- 管理员恢复：生产库中唯一的启用超级管理员已在修改前创建 `audit_backup_20260811_1130_users` 备份表；已清除登录锁定并使用原有交接凭据恢复。线上 `/api/admin/session` 对 `identifier: admin` 返回 `200` 且设置 HttpOnly 会话 Cookie。
+- 账号兼容：登录页和 API 支持 `admin` 或真实邮箱；`admin` 仅解析到唯一启用的超级管理员，不向浏览器暴露该邮箱。
+- 产品同步：已将 26 条现有 Chile 产品目录以 `chile:<slug>` 标识写入生产 PostgreSQL（只插入缺失记录，未覆盖或删除原有 4 条历史产品）；修改前备份表为 `audit_backup_20260811_1130_products` 与 `audit_backup_20260811_1130_product_translations`。
+- 前台目录：`/es/productos`、`/es/productos/[slug]` 与 sitemap 现在以发布状态的数据库目录为来源；静态内容仅为既有产品族的非编辑选型说明模板。
+- 管理后台部分更新：修复 `PATCH /api/admin/products` 与 `PATCH /api/admin/news` 错误继承创建默认值的问题。此前只更新简介/正文会把未提供的状态变为 `draft`；现在使用无默认值的更新校验模型。
+- Webhook：Vercel Production 的 `WEBHOOK_ARTICLE_SIGN` 已与授权插件配置重新对齐，仍为 Sensitive 环境变量，未写入仓库或报告。
+
+### 真实端到端证据
+
+| 流程 | 结果 |
+| --- | --- |
+| `admin` 登录 | `200`、`success: true`、响应含会话 Cookie |
+| 后台产品更新 → 数据库 | `PATCH 200`，产品状态保持 `published` |
+| 后台产品更新 → 前台详情 | `/es/productos/sistema-incendio-edj` 返回 `200` 且即时显示临时验证标记 |
+| 产品还原 | `PATCH 200`，原简介恢复，最终状态仍为 `published` |
+| Webhook 测试发布 | `POST /api/webhook/send_article` 返回 `200` 与 `code: 1` |
+| Blog 写入与前台展示 | 生产数据库找到测试文章；对应 `/es/blog/<slug>` 返回 `200` 并显示正文 |
+| 测试文章撤回 | 管理 API 软删除后文章状态为 `archived`、`deleted_at` 有值，详情页返回 `404` |
+| Google SEO 频率 | 仍为 `17 3 */3 * *` UTC，应用层 72 小时防重复保护未改动 |
+
+### 最终部署与质量门
+
+- 代码提交：`3c3f430`、`fff32ce`、`85a161a`、`b60385d`。
+- 当前生产部署：Vercel `grimmfirepump-e1jhwzo3h-davidsha.vercel.app`，状态 `Ready`，别名为 `grimmfirepump.cl` 与 `www.grimmfirepump.cl`。
+- 质量门：`npm run lint`（0 error、2 条既有远程 Blog 图片优化 warning）、`npm test`（5/5 通过）、`npm run build`（成功）。
+- 回滚：数据库可从上述三个备份表恢复；代码可在 Vercel 回滚到前一个 Ready 部署或 Git 回退至 `85a161a`。
