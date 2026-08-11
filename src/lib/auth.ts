@@ -33,24 +33,30 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   } catch { return null; }
 }
 
-export async function authenticateAdmin(input: { email: string; password: string; ip: string | null; userAgent: string | null }) {
-  const email = input.email.trim().toLowerCase();
+export async function authenticateAdmin(input: { identifier: string; password: string; ip: string | null; userAgent: string | null }) {
+  const identifier = input.identifier.trim().toLowerCase();
   const db = await getDatabase();
   const now = new Date();
-  const found = await db.execute({ sql: "SELECT id,email,name,password_hash,role,status,failed_login_count,locked_until FROM users WHERE email = ?", args: [email] });
+  // The original management hand-off uses the conventional `admin` account name,
+  // while the database stores an email address as the immutable account identifier.
+  // Keep the email path exact and only resolve `admin` to the single active
+  // super-admin account; this does not disclose its address to the client.
+  const found = identifier === "admin"
+    ? await db.execute({ sql: "SELECT id,email,name,password_hash,role,status,failed_login_count,locked_until FROM users WHERE role='super_admin' AND status='active' ORDER BY created_at ASC LIMIT 1" })
+    : await db.execute({ sql: "SELECT id,email,name,password_hash,role,status,failed_login_count,locked_until FROM users WHERE email = ?", args: [identifier] });
   const row = found.rows[0];
   const ipHash = hashIp(input.ip);
-  const recordAttempt = async (success: boolean) => db.execute({ sql: "INSERT INTO login_attempts (id,email,ip_hash,success,created_at) VALUES (?,?,?,?,?)", args: [randomUUID(), email, ipHash || null, success ? 1 : 0, now.toISOString()] });
-  if (!row || String(row.status) !== "active") { await recordAttempt(false); await writeAudit({ action: "login_failed", entityType: "user", details: { email }, result: "failure", ipHash, userAgent: input.userAgent || undefined }); return { ok: false as const, reason: "账号或密码错误。" }; }
+  const recordAttempt = async (success: boolean) => db.execute({ sql: "INSERT INTO login_attempts (id,email,ip_hash,success,created_at) VALUES (?,?,?,?,?)", args: [randomUUID(), identifier, ipHash || null, success ? 1 : 0, now.toISOString()] });
+  if (!row || String(row.status) !== "active") { await recordAttempt(false); await writeAudit({ action: "login_failed", entityType: "user", details: { identifier }, result: "failure", ipHash, userAgent: input.userAgent || undefined }); return { ok: false as const, reason: "账号或密码错误。" }; }
   if (row.locked_until && new Date(String(row.locked_until)) > now) return { ok: false as const, reason: `登录已临时锁定，请 ${lockMinutes} 分钟后再试。` };
   if (!(await compare(input.password, String(row.password_hash)))) {
     const failures = Number(row.failed_login_count || 0) + 1;
     const lockedUntil = failures >= maxFailedAttempts ? new Date(now.getTime() + lockMinutes * 60_000).toISOString() : null;
     await db.execute({ sql: "UPDATE users SET failed_login_count=?, locked_until=?, updated_at=? WHERE id=?", args: [failures, lockedUntil, now.toISOString(), String(row.id)] });
-    await recordAttempt(false); await writeAudit({ action: "login_failed", entityType: "user", entityId: String(row.id), details: { email }, result: "failure", ipHash, userAgent: input.userAgent || undefined });
+    await recordAttempt(false); await writeAudit({ action: "login_failed", entityType: "user", entityId: String(row.id), details: { identifier }, result: "failure", ipHash, userAgent: input.userAgent || undefined });
     return { ok: false as const, reason: lockedUntil ? `登录失败次数过多，已锁定 ${lockMinutes} 分钟。` : "账号或密码错误。" };
   }
   await db.execute({ sql: "UPDATE users SET failed_login_count=0, locked_until=NULL, last_login_at=?, updated_at=? WHERE id=?", args: [now.toISOString(), now.toISOString(), String(row.id)] });
-  await recordAttempt(true); await writeAudit({ action: "login", entityType: "user", entityId: String(row.id), details: { email }, ipHash, userAgent: input.userAgent || undefined });
+  await recordAttempt(true); await writeAudit({ action: "login", entityType: "user", entityId: String(row.id), details: { identifier }, ipHash, userAgent: input.userAgent || undefined });
   return { ok: true as const, user: { userId: String(row.id), email: String(row.email), name: String(row.name), role: String(row.role) as AdminRole } };
 }

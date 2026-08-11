@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { chileProducts, chileSolutions, legacyProductRedirects } from "@/lib/chile-content";
+import { chileSolutions, legacyProductRedirects } from "@/lib/chile-content";
+import { getChileCatalog } from "@/lib/chile-catalog";
 import { JsonLd, SiteFooter, SiteHeader } from "@/components/site-shell";
 
-export function generateStaticParams() {
-  return chileProducts.map(({ slug }) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const product = chileProducts.find((item) => item.slug === slug);
+  const product = (await getChileCatalog()).find((item) => item.slug === slug);
   if (!product) return {};
   return {
     title: product.title,
@@ -25,7 +24,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
   const { slug } = await params;
   const legacyTarget = legacyProductRedirects[slug];
   if (legacyTarget) permanentRedirect(`/es/productos/${legacyTarget}`);
-  const product = chileProducts.find((item) => item.slug === slug);
+  const product = (await getChileCatalog()).find((item) => item.slug === slug);
   if (!product) notFound();
   const related = chileSolutions.filter((item) => product.relatedSolutions.includes(item.slug));
   const url = `https://grimmfirepump.cl/es/productos/${product.slug}`;
