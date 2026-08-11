@@ -36,17 +36,36 @@ export async function getChileCatalog(): Promise<ChileProduct[]> {
     sql: "SELECT t.slug,t.name,t.short_description,t.seo_title,p.technical_specs FROM products p JOIN product_translations t ON t.product_id=p.id AND t.locale='es' WHERE p.deleted_at IS NULL AND p.status='published' AND p.sku LIKE ? ORDER BY p.sort_order,p.created_at",
     args: ["chile:%"],
   });
-  const rows = new Map(result.rows.map((row) => [String(row.slug), row as unknown as CatalogRow]));
+  const templates = new Map(chileProducts.map((product) => [product.slug, product]));
 
-  return chileProducts.map((fallback) => {
-    const row = rows.get(fallback.slug);
-    if (!row) return fallback;
+  // The database determines which products are public and supplies all fields
+  // that administrators can edit. A static template adds only non-editable
+  // selection guidance for the established 26 product families.
+  return result.rows.map((value) => {
+    const row = value as unknown as CatalogRow;
+    const fallback = templates.get(row.slug);
+    if (fallback) {
+      return {
+        ...fallback,
+        name: row.name || fallback.name,
+        title: row.seo_title || fallback.title,
+        description: row.short_description || fallback.description,
+        verifiedSpecifications: readSpecifications(row.technical_specs, fallback.verifiedSpecifications),
+      };
+    }
     return {
-      ...fallback,
-      name: row.name || fallback.name,
-      title: row.seo_title || fallback.title,
-      description: row.short_description || fallback.description,
-      verifiedSpecifications: readSpecifications(row.technical_specs, fallback.verifiedSpecifications),
+      slug: row.slug,
+      name: row.name,
+      title: row.seo_title || `${row.name} | GRIMM PUMP Chile`,
+      description: row.short_description || "Información de producto disponible según los requisitos del proyecto.",
+      category: "Productos",
+      processRole: "La configuración se revisa con los datos técnicos y las condiciones de instalación del proyecto.",
+      driveType: "Se confirma para el proyecto",
+      contexts: ["Proyectos de bombeo"],
+      selectionInputs: ["Caudal y presión requeridos", "Condiciones de instalación", "Documentación del proyecto"],
+      verifiedSpecifications: readSpecifications(row.technical_specs, [["Configuración", "Se confirma para el proyecto"]]),
+      faq: [],
+      relatedSolutions: [],
     };
   });
 }
