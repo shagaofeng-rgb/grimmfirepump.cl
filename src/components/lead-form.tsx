@@ -2,9 +2,13 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 export function LeadForm({ locale }: { locale: "es" | "pt" | "en" }) {
   const [state, setState] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const searchParams = useSearchParams();
+  const productFromPage = searchParams.get("producto") || "";
+  const [productInterest, setProductInterest] = useState(productFromPage);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,7 +44,7 @@ export function LeadForm({ locale }: { locale: "es" | "pt" | "en" }) {
         <div><label htmlFor="lead-email">Email</label><input id="lead-email" required type="email" name="email" autoComplete="email" placeholder="nombre@empresa.com" /></div>
         <div><label htmlFor="lead-country">País / región</label><select id="lead-country" required name="country" defaultValue=""><option value="" disabled>Seleccionar</option><option>Chile</option><option>Argentina</option><option>Brasil</option><option>Colombia</option><option>Perú</option><option>Otro país de Sudamérica</option></select></div>
       </div>
-      <div><label htmlFor="lead-product">Interés de producto</label><select id="lead-product" name="productInterest" defaultValue=""><option value="">Seleccionar sistema</option><option>Sistema EDJ</option><option>Bomba diésel contra incendio</option><option>Bomba eléctrica contra incendio</option><option>Bomba jockey</option><option>Bomba de eje largo</option><option>Otro / necesito orientación</option></select></div>
+      <div><label htmlFor="lead-product">Interés de producto</label><select id="lead-product" name="productInterest" value={productInterest} onChange={(event) => setProductInterest(event.target.value)}><option value="">Seleccionar sistema</option>{productFromPage ? <option value={productFromPage}>Producto consultado: {productFromPage.replaceAll("-", " ")}</option> : null}<option>Sistema EDJ</option><option>Bomba diésel contra incendio</option><option>Bomba eléctrica contra incendio</option><option>Bomba jockey</option><option>Bomba de eje largo</option><option>Otro / necesito orientación</option></select></div>
       <div className="form-row">
         <div><label htmlFor="lead-flow">Caudal</label><input id="lead-flow" name="flow" placeholder="Ej. 500 GPM" /></div>
         <div><label htmlFor="lead-pressure">Presión / altura</label><input id="lead-pressure" name="pressure" placeholder="Ej. 10 bar" /></div>
