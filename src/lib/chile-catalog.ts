@@ -8,7 +8,11 @@ type CatalogRow = {
   short_description: string | null;
   seo_title: string | null;
   technical_specs: string | null;
+  updated_at: string | null;
+  published_at: string | null;
 };
+
+export type ChileCatalogProduct = ChileProduct & { lastModified?: string };
 
 function readSpecifications(value: string | null, fallback: ChileProduct["verifiedSpecifications"]) {
   if (!value) return fallback;
@@ -26,14 +30,14 @@ function readSpecifications(value: string | null, fallback: ChileProduct["verifi
  * remains only as a presentation/selection template for fields that the current
  * admin model does not yet expose (FAQ, application checklist and relations).
  */
-export async function getChileCatalog(): Promise<ChileProduct[]> {
+export async function getChileCatalog(): Promise<ChileCatalogProduct[]> {
   // The catalogue must reflect administrative changes on the next request.
   // In Next.js 16, `connection()` explicitly prevents this database read from
   // being captured in a prerendered shell or a route-level cache.
   await connection();
   const db = await getDatabase();
   const result = await db.execute({
-    sql: "SELECT t.slug,t.name,t.short_description,t.seo_title,p.technical_specs FROM products p JOIN product_translations t ON t.product_id=p.id AND t.locale='es' WHERE p.deleted_at IS NULL AND p.status='published' AND p.sku LIKE ? ORDER BY p.sort_order,p.created_at",
+    sql: "SELECT t.slug,t.name,t.short_description,t.seo_title,p.technical_specs,p.updated_at,p.published_at FROM products p JOIN product_translations t ON t.product_id=p.id AND t.locale='es' WHERE p.deleted_at IS NULL AND p.status='published' AND p.sku LIKE ? ORDER BY p.sort_order,p.created_at",
     args: ["chile:%"],
   });
   const templates = new Map(chileProducts.map((product) => [product.slug, product]));
@@ -51,6 +55,7 @@ export async function getChileCatalog(): Promise<ChileProduct[]> {
         title: row.seo_title || fallback.title,
         description: row.short_description || fallback.description,
         verifiedSpecifications: readSpecifications(row.technical_specs, fallback.verifiedSpecifications),
+        lastModified: row.updated_at || row.published_at || undefined,
       };
     }
     return {
@@ -66,6 +71,7 @@ export async function getChileCatalog(): Promise<ChileProduct[]> {
       verifiedSpecifications: readSpecifications(row.technical_specs, [["Configuración", "Se confirma para el proyecto"]]),
       faq: [],
       relatedSolutions: [],
+      lastModified: row.updated_at || row.published_at || undefined,
     };
   });
 }

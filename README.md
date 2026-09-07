@@ -17,7 +17,7 @@ $env:PATH = (Resolve-Path "../.tools/node").Path + ";" + $env:PATH
 - 角色权限：超级管理员、管理员、编辑、市场、销售、分析、只读；API 与导航均按权限判断。
 - 业务模块：数据概览、产品/分类、新闻、客户表单、用户、SEO、同步、设置、操作日志。
 - 数据能力：服务端搜索、分页（10/20/50/100）、软删除、线索状态/负责人/备注接口、审计日志。
-- SEO：Google Search Console 服务账号同步、任务日志、后台手动同步、Vercel Cron 路由。
+- SEO：Google Search Console 指标同步、Sitemap 正式提交、独立任务日志、后台手动验证与 Vercel Cron 路由。
 
 ## 环境变量
 
@@ -29,7 +29,7 @@ $env:PATH = (Resolve-Path "../.tools/node").Path + ";" + $env:PATH
 - `DATABASE_AUTH_TOKEN`：远程 LibSQL 数据库访问令牌。
 - `AUTH_SECRET`：随机的高熵会话签名密钥。
 - `ADMIN_EMAIL`、`ADMIN_PASSWORD`：仅供首次初始化管理员使用。
-- `GOOGLE_SERVICE_ACCOUNT_JSON`：Vercel 加密变量，不得写入仓库。
+- `GOOGLE_SERVICE_ACCOUNT_JSON`：Vercel 加密变量，不得写入仓库。服务账号必须作为 `sc-domain:grimmfirepump.cl` 属性的完整用户添加；指标读取使用只读授权，Sitemap 提交使用 Google `webmasters` 授权范围。
 - `GOOGLE_SEARCH_CONSOLE_PROPERTY=sc-domain:grimmfirepump.cl`
 - `CRON_SECRET`：保护 `/api/cron/search-console`。
 
@@ -47,7 +47,7 @@ Vercel 不提供可持久化的函数本地磁盘；不要在生产环境使用 
 
 ## 同步与备份
 
-- Search Console：手动执行 `POST /api/admin/sync/search-console`，或由 `vercel.json` 每 6 小时调用受 `CRON_SECRET` 保护的 Cron 路由。
+- Search Console：手动执行 `POST /api/admin/sync/search-console`，或由 `vercel.json` 每 3 个日历日调用受 `CRON_SECRET` 保护的 Cron 路由。定时任务会先同步指标，再按 Sitemap 内容指纹和 72 小时保护规则提交 `https://grimmfirepump.cl/sitemap.xml`；提交成功只表示 Google 已接收 Sitemap，不表示页面已被收录。
 - 数据库备份：使用所选 LibSQL/Turso 服务的官方备份/时间点恢复能力；上线前应执行一次还原演练。对象存储接入后，媒体文件需由对象存储自身的版本/备份策略覆盖。
 
 ## 已知外部依赖
