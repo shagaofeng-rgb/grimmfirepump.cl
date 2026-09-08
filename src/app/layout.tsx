@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { VisitorTracker } from "@/components/visitor-tracker";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,5 +12,5 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const gaId = process.env.NEXT_PUBLIC_GA4_ID;
-  return <html lang="es-CL"><head>{process.env.NEXT_PUBLIC_GSC_VERIFICATION ? <meta name="google-site-verification" content={process.env.NEXT_PUBLIC_GSC_VERIFICATION} /> : null}{process.env.NEXT_PUBLIC_BING_VERIFICATION ? <meta name="msvalidate.01" content={process.env.NEXT_PUBLIC_BING_VERIFICATION} /> : null}</head><body>{children}{gaId ? <><Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive"/><Script id="ga4" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','${gaId}',{anonymize_ip:true});`}</Script></> : null}</body></html>;
+  return <html lang="es-CL"><head>{process.env.NEXT_PUBLIC_GSC_VERIFICATION ? <meta name="google-site-verification" content={process.env.NEXT_PUBLIC_GSC_VERIFICATION} /> : null}{process.env.NEXT_PUBLIC_BING_VERIFICATION ? <meta name="msvalidate.01" content={process.env.NEXT_PUBLIC_BING_VERIFICATION} /> : null}</head><body>{children}<VisitorTracker />{gaId ? <><Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive"/><Script id="ga4" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','${gaId}',{anonymize_ip:true});`}</Script></> : null}</body></html>;
 }

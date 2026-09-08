@@ -3,6 +3,7 @@
 
 import { FormEvent, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { getVisitorContext } from "@/components/visitor-tracker";
 
 export function LeadForm({ locale }: { locale: "es" | "pt" | "en" }) {
   const [state, setState] = useState<"idle" | "sending" | "success" | "error">("idle");
@@ -20,7 +21,7 @@ export function LeadForm({ locale }: { locale: "es" | "pt" | "en" }) {
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, locale, sourcePath: window.location.pathname }),
+        body: JSON.stringify({ ...payload, locale, sourcePath: window.location.pathname, ...getVisitorContext() }),
       });
 
       if (response.ok) {

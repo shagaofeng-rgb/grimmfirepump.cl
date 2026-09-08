@@ -1,10 +1,10 @@
-import { randomUUID } from "node:crypto";
 import { createClient, type InStatement } from "@libsql/client";
 import { Pool } from "@neondatabase/serverless";
+import { createHash, randomUUID } from "node:crypto";
 import { products as legacyProducts } from "@/lib/products";
 
 type DatabaseResult = { rows: Record<string, unknown>[] };
-type DatabaseClient = {
+export type DatabaseClient = {
   execute(statement: string | InStatement): Promise<DatabaseResult>;
   executeMultiple(sql: string): Promise<void>;
 };
@@ -81,6 +81,20 @@ async function migrateLegacyCatalog(db: DatabaseClient) {
     const id = randomUUID(); const specs = Object.fromEntries(product.specs);
     await db.execute({ sql: "INSERT INTO products (id,category_id,status,is_featured,sort_order,technical_specs,created_at,updated_at,published_at) VALUES (?,?,?,?,?,?,?,?,?)", args: [id, categoryId, "published", 1, categories.size, JSON.stringify(specs), now, now, now] });
     await db.execute({ sql: "INSERT INTO product_translations (id,product_id,locale,name,slug,short_description,content,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)", args: [randomUUID(), id, "es", product.name, product.slug, product.description, null, now, now] });
+  }
+}
+
+/** Backfills only verified lead identity; historic page journeys are intentionally never fabricated. */
+async function backfillCustomerProfiles(db: DatabaseClient) {
+  const leads = await db.execute("SELECT id,name,company,email,country,created_at FROM leads WHERE deleted_at IS NULL AND customer_id IS NULL");
+  for (const lead of leads.rows) {
+    const email = String(lead.email || "").trim().toLowerCase(); if (!email) continue;
+    const hash = createHash("sha256").update(email).digest("hex"); const occurredAt = String(lead.created_at);
+    const current = await db.execute({ sql: "SELECT id,first_seen_at FROM customer_profiles WHERE email_hash=? LIMIT 1", args: [hash] });
+    const customerId = current.rows[0]?.id ? String(current.rows[0].id) : randomUUID();
+    if (current.rows.length) await db.execute({ sql: "UPDATE customer_profiles SET last_seen_at=CASE WHEN last_seen_at>? THEN last_seen_at ELSE ? END,updated_at=? WHERE id=?", args: [occurredAt, occurredAt, occurredAt, customerId] });
+    else await db.execute({ sql: "INSERT INTO customer_profiles (id,email_hash,display_name,company,country,first_seen_at,last_seen_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)", args: [customerId, hash, String(lead.name), String(lead.company), String(lead.country), occurredAt, occurredAt, occurredAt, occurredAt] });
+    await db.execute({ sql: "UPDATE leads SET customer_id=? WHERE id=?", args: [customerId, String(lead.id)] });
   }
 }
 
@@ -168,6 +182,25 @@ export async function getDatabase() {
       );
       CREATE INDEX IF NOT EXISTS leads_created_at_idx ON leads(created_at); CREATE INDEX IF NOT EXISTS leads_email_idx ON leads(email);
       CREATE INDEX IF NOT EXISTS leads_status_idx ON leads(status, created_at); CREATE INDEX IF NOT EXISTS leads_country_idx ON leads(country);
+      CREATE TABLE IF NOT EXISTS customer_profiles (
+        id TEXT PRIMARY KEY, email_hash TEXT NOT NULL UNIQUE, display_name TEXT NOT NULL, company TEXT NOT NULL,
+        country TEXT NOT NULL, first_seen_at TEXT NOT NULL, last_seen_at TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS customer_profiles_last_seen_idx ON customer_profiles(last_seen_at);
+      CREATE TABLE IF NOT EXISTS visitor_sessions (
+        id TEXT PRIMARY KEY, visitor_id TEXT NOT NULL, landing_path TEXT NOT NULL, referrer_host TEXT,
+        locale TEXT, device_type TEXT, utm_source TEXT, utm_medium TEXT, utm_campaign TEXT,
+        started_at TEXT NOT NULL, last_seen_at TEXT NOT NULL, created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS visitor_sessions_visitor_idx ON visitor_sessions(visitor_id, started_at);
+      CREATE TABLE IF NOT EXISTS visit_events (
+        id TEXT PRIMARY KEY, visitor_id TEXT NOT NULL, session_id TEXT NOT NULL, event_type TEXT NOT NULL DEFAULT 'page_view',
+        page_path TEXT NOT NULL, page_title TEXT, referrer_path TEXT, occurred_at TEXT NOT NULL,
+        FOREIGN KEY(session_id) REFERENCES visitor_sessions(id) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS visit_events_session_idx ON visit_events(session_id, occurred_at);
+      CREATE INDEX IF NOT EXISTS visit_events_visitor_idx ON visit_events(visitor_id, occurred_at);
+      CREATE INDEX IF NOT EXISTS visit_events_path_idx ON visit_events(page_path, occurred_at);
       CREATE TABLE IF NOT EXISTS lead_notes (
         id TEXT PRIMARY KEY, lead_id TEXT NOT NULL, body TEXT NOT NULL, created_by TEXT, created_at TEXT NOT NULL,
         FOREIGN KEY(lead_id) REFERENCES leads(id) ON DELETE CASCADE, FOREIGN KEY(created_by) REFERENCES users(id)
@@ -278,6 +311,9 @@ export async function getDatabase() {
     await ensureColumn(db, "ALTER TABLE leads ADD COLUMN tags TEXT");
     await ensureColumn(db, "ALTER TABLE leads ADD COLUMN updated_at TEXT");
     await ensureColumn(db, "ALTER TABLE leads ADD COLUMN deleted_at TEXT");
+    await ensureColumn(db, "ALTER TABLE leads ADD COLUMN customer_id TEXT");
+    await ensureColumn(db, "ALTER TABLE leads ADD COLUMN visitor_id TEXT");
+    await ensureColumn(db, "ALTER TABLE leads ADD COLUMN session_id TEXT");
     await ensureColumn(db, "ALTER TABLE audit_logs ADD COLUMN actor_id TEXT");
     await ensureColumn(db, "ALTER TABLE audit_logs ADD COLUMN ip_hash TEXT");
     await ensureColumn(db, "ALTER TABLE audit_logs ADD COLUMN user_agent TEXT");
@@ -286,9 +322,11 @@ export async function getDatabase() {
     await ensureColumn(db, "ALTER TABLE news_articles ADD COLUMN external_author_id TEXT");
     await ensureColumn(db, "ALTER TABLE news_articles ADD COLUMN cover_image_url TEXT");
     await db.execute("CREATE INDEX IF NOT EXISTS audit_logs_actor_idx ON audit_logs(actor_id, created_at)");
+    await db.execute("CREATE INDEX IF NOT EXISTS leads_customer_created_idx ON leads(customer_id, created_at)");
     await db.execute("CREATE UNIQUE INDEX IF NOT EXISTS news_articles_external_fingerprint_unique ON news_articles(external_fingerprint) WHERE external_fingerprint IS NOT NULL");
     await seedRolesAndAdmin(db);
     await migrateLegacyCatalog(db);
+    await backfillCustomerProfiles(db);
     initialized = true;
   }
   return db;

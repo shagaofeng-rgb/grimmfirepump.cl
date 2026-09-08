@@ -7,7 +7,7 @@ import { AdminLogoutButton } from "@/components/admin-logout-button";
 const nav = [
   ["/admin", "数据概览", "dashboard:view"], ["/admin/products", "产品管理", "products:view"], ["/admin/categories", "产品分类", "products:view"],
   ["/admin/news", "新闻管理", "news:view"], ["/admin/sync", "新闻自动化", "seo:view"], ["/admin/media", "媒体资源", "products:view"],
-  ["/admin/leads", "客户询盘", "leads:view"], ["/admin/forms", "表单管理", "leads:view"], ["/admin/analytics", "访问分析", "analytics:view"],
+  ["/admin/customers", "客户中心", "leads:view"], ["/admin/leads", "客户询盘", "leads:view"], ["/admin/forms", "表单管理", "leads:view"], ["/admin/analytics", "访问分析", "analytics:view"],
   ["/admin/seo", "SEO 管理", "seo:view"], ["/admin/pages", "页面管理", "settings:manage"], ["/admin/downloads", "下载资料", "products:view"],
   ["/admin/users", "账号与权限", "users:manage"], ["/admin/audit", "操作日志", "audit:view"], ["/admin/settings", "系统设置", "settings:manage"],
 ] as const;
